@@ -1,0 +1,36 @@
+Byte 0 = opcode · Byte 1 = destination/source register (AX=0, BX=1, CX=2, DX=3) · Byte 2 = source register or high bit of the address · Byte 3 = immediate or low byte of the address. Virtual addresses are 9 bits (0x000-0x1DF). 8 instructions per 32 B page; one 8 B L1I line holds 2 instructions.
+# INSTRUCTION TABLE (20 instructions)
+|!Opc|Mnemonic|Example|Micro-operations (execute)|Flags
+|00|NOP|NOP|—|—
+|01|MOV r, imm|MOV CX, 5|r ← IR.imm  [En_IR, Ld_r]|—
+|02|MOV r, r2|MOV CX, BX|r ← r2  [En_r2, Ld_r]|—
+|03|MOV r, [addr]|MOV AX, [0x040]|MAR ← addr; MMU; L1D→L2→RAM; MDR ← M[PA]; r ← MDR|—
+|04|MOV [addr], r|MOV [0x042], DX|MAR ← addr; MDR ← r; MMU; bus ← MDR (write-through); D=1|—
+|05|ADD r, r2|ADD DX, AX|ALU.A ← r; ALU.B ← r2; r ← ALU  [En_ALU, Ld_r]|ZF CF SF
+|06|ADD r, imm|ADD AX, 1|ALU.B ← IR.imm|ZF CF SF
+|07|SUB r, r2|SUB AX, BX|r ← r − r2|ZF CF SF
+|08|SUB r, imm|SUB CX, 1|r ← r − imm|ZF CF SF
+|09|INC r|INC BX|r ← r + 1|ZF SF
+|0A|DEC r|DEC CX|r ← r − 1|ZF SF
+|0B|CMP r, r2|CMP AX, BX|ALU: r − r2 (result not stored)|ZF CF SF
+|0C|CMP r, imm|CMP DX, 0|ALU: r − imm (result not stored)|ZF CF SF
+|0D|JMP addr|JMP NEXT|PC ← addr  [En_IR, Ld_PC]|—
+|0E|JZ addr|JZ DONE|if ZF=1: PC ← addr|—
+|0F|JNZ addr|JNZ LOOP|if ZF=0: PC ← addr|—
+|13|JC addr|JC BIGGER|if CF=1: PC ← addr|—
+|10|IN r, [KBD]|IN DX, [KBD]|M7 queue → bus (En_KBD) → MDR → r ; ZF=1 if the queue is empty|ZF
+|11|OUT [LCD], r|OUT [LCD], DX|r → MDR → bus → M7 video buffer → LCD (Ld_LCD)|—
+|12|HLT|HLT|stops the CPU|—
+# FETCH CYCLE (common to every instruction)
+T1:  MAR ← PC                         [En_PC, Ld_MAR]  (internal bus)
+T2:  MMU: VPN = PC ÷ 32 → page table → frame  (page fault if P = 0)
+T3:  L1I → (miss) L2 → (miss) RAM ;  MDR ← 4 bytes   [Mem_R, Ld_MDR]
+T4:  IR ← MDR                         [En_MDR, Ld_IR]
+T5:  PC ← PC + 4                      [Ld_PC]   → decode and execute
+# MEMORY MAP
+Virtual (disk): 0x000-0x1FF = 16 pages × 32 B.  Programs: code from 0x000, data with .DATA
+Physical (RAM): 0x00-0xFF = 8 frames × 32 B.  Frames M0-M6 = user (paged).  M7 = pinned I/O (page 15)
+Memory-mapped I/O in RAM:  0xE0-0xE7 keyboard queue (8 B)  ·  0xE8-0xEF LCD video buffer (8 B)
+L2 cache: line = (PA ÷ 8) mod 4 · TAG = base PA.  L1I / L1D: one 8 B line each.
+# CONTROL WORD (21 signals, in display order)
+En_PC, Ld_PC, Ld_MAR, Mem_R, Mem_W, IO, Ld_MDR, En_MDR, Ld_IR, En_IR, En_ALU, Ld_AX, En_AX, Ld_BX, En_BX, Ld_CX, En_CX, Ld_DX, En_DX, En_KBD, Ld_LCD.  En_* = tri-state output enable (only one at a time); Ld_* = register load; Mem_R / Mem_W / IO = control bus.
