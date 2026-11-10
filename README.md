@@ -1,3 +1,6 @@
+<p align="center"><img src="assets/logo.png" alt="SCZ-Architecture logo" width="170"></p>
+<p align="center"><b>Team SCZ-Architecture</b> · Josue Cartagena · Jussel Avila</p>
+
 # Advanced Computer Architecture Simulator
 
 **SIS-131 Computer Architecture · Second Partial 2/2026 · Universidad Católica Boliviana "San Pablo" (Santa Cruz)**
