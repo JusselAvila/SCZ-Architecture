@@ -1,0 +1,18 @@
+# 2. Controls (SIMULATOR sheet)
+P1 / P2 / P3 = assemble the catalog program and load it into VIRTUAL MEMORY (disk). RAM stays empty.
+▶ Step = runs ONE full instruction (fetch + execute) with all its micro-operations animated.
+▶▶ Run = repeats Step until HLT (a finished program is reloaded and run again).  ■ Stop = pauses.  ⟲ Reset = reloads the current program.
+Speed 1-5 (1 = very slow to explain, 5 = instant).  Animate fetch = NO speeds up the fetch to focus on data.  Page replacement = LRU or FIFO.
+# 3. How to read the animation
+The wire where the data travels lights up and a YELLOW cell (the token) runs along the bus showing the value: blue = data bus, pink = address bus, orange = control bus (MEM_R, MEM_W, IO, DMA).
+Next to every register there is a tri-state buffer: ON (green) = Enable=1, drives the bus; Z (gray) = high impedance. The control word shows the 21 signals on every micro-step.
+Every virtual page has its own COLOR: the same color appears on disk, in the RAM frame that receives it, in the cache lines and in the timeline.
+# 4. Suggested demo (defense)
+P1 Multiplication: type A and B in PROGRAM 1 INPUTS (top right), press P1 and then Run. Watch the 3 initial page faults (P0 code, P2 data, P1 code), the first MISS in L1D/L2 and then HITs. In every loop AX and DX travel to the ALU over the internal bus and the result goes back to DX.
+P2 Keyboard → LCD: load P2, type the text in the yellow keyboard box (max. 8 letters) and press Run. Each letter leaves the queue (En_KBD) → bus → MDR → DX → MDR → bus → video buffer M7 → bus → LCD screen.
+P3 Swap: speed 3, replacement = LRU. Frames M0-M6 FILL one by one (timeline). Then every new access picks a victim: a dirty one (D=1) shows SWAP-OUT (RAM → disk) and then SWAP-IN (disk → RAM). CX receives AA from disk. Repeat with FIFO and compare.
+Live changes: edit the program lines in PROGRAMS (press Enter in each cell) and press P1, P2 or P3 again. The assembler recalculates every address and every jump label. Always use labels (LOOP:, END:) in jumps, never fixed addresses.
+# 5. Simulated architecture
+Single-core 8-bit CPU: AX, BX, CX, DX + PC (9 bits), IR, MAR, MDR, flags ZF CF SF. Internal bus (registers/ALU) and external buses (control, address, data) to caches, RAM, disk and I/O.
+RAM 256 B = 8 frames of 32 B. Virtual memory 512 B = 16 pages of 32 B on disk. M7 is pinned to page 15 (I/O): keyboard queue 0xE0-0xE7 and LCD video 0xE8-0xEF; so 7 frames are paged.
+Caches: L1I (8 B, instructions), L1D (8 B, data), L2 (32 B, 4 direct-mapped lines). Write-through. When a frame is evicted its cache lines are invalidated (coherence).
