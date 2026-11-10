@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {"name": "P1 7 x 5", "load": "BtnLoadP1", "A": 7, "B": 5,
+     "expect": {"DX": "23", "P1RES": "7 x 5 = 35", "PF": 3, "SWOUT": 0, "INSTR": 23, "HALT": 1}},
+    {"name": "P1 12 x 15", "load": "BtnLoadP1", "A": 12, "B": 15, "policies": ["LRU"],
+     "expect": {"DX": "B4", "P1RES": "12 x 15 = 180", "HALT": 1}},
+    {"name": "P1 25 x 0", "load": "BtnLoadP1", "A": 25, "B": 0, "policies": ["LRU"],
+     "expect": {"DX": "00", "P1RES": "25 x 0 = 0", "HALT": 1}},
+    {"name": "P1 16 x 16 (overflow)", "load": "BtnLoadP1", "A": 16, "B": 16, "policies": ["LRU"],
+     "expect": {"DX": "00", "P1RES": "16 x 16 = 0  (8-bit overflow: real 256)", "HALT": 1}},
+    {"name": "P2 HELLO", "load": "BtnLoadP2", "text": "HELLO",
+     "expect": {"LCD": "HELLO", "INSTR": 23, "PF": 1, "HALT": 1}},
+    {"name": "P2 Hola UCB", "load": "BtnLoadP2", "text": "Hola UCB", "policies": ["LRU"],
+     "expect": {"LCD": "Hola UCB", "INSTR": 35, "HALT": 1}},
+    {"name": "P3 memory fill + swap", "load": "BtnLoadP3",
+     "expect": {"CX": "AA", "PF": 11, "SWIN": 11, "SWOUT": 3, "INSTR": 11, "HALT": 1},
+     "expect_LRU": {"VICTIMS": ["P2", "P3", "P4", "P5"]},
+     "expect_FIFO": {"VICTIMS": ["P0", "P2", "P3", "P4"]}},
+    {"name": "EDITOR sample (HOLA)", "load": "BtnLoadEditor",
+     "expect": {"LCD": "HOLA", "PF": 2, "HALT": 1}}
+  ]
+}
